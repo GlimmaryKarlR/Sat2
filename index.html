@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SeOMEO | Canvas Orbital Topology</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0B0F19; color: #E2E8F0; font-family: 'Segoe UI', sans-serif; overflow-x: hidden; }
+        .glass { background: rgba(21, 26, 40, 0.8); backdrop-filter: blur(10px); border: 1px solid #1E293B; }
+        .font-mono { font-family: 'Courier New', Courier, monospace; }
+        select { background: #1E293B; border: 1px solid #334155; color: #00F0FF; outline: none; }
+        canvas { cursor: move; }
+        .stat-card { border-left: 3px solid #334155; padding-left: 1rem; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <header class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tighter text-[#00F0FF]">SeOMEO <span class="text-white opacity-40">CANVAS_v3.0</span></h1>
+            <p class="text-slate-500 text-xs uppercase tracking-widest">Master Catalog & Gravity Anomaly Integration</p>
+        </div>
+        <div class="flex flex-col items-end">
+            <span class="text-[10px] text-slate-500 mb-1">E:\SEOMEO\working\MASTER_CATALOG.TXT</span>
+            <select id="catalogDropdown" onchange="handleSelection()" class="p-2 rounded w-64 text-sm font-mono">
+                <option value="">Loading Catalog...</option>
+            </select>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">
+        
+        <div class="lg:col-span-1 space-y-4">
+            <div class="glass p-5 rounded-xl border-t-2 border-[#00F0FF]">
+                <h2 class="text-xs font-bold text-slate-400 uppercase mb-4">Anomaly Engine</h2>
+                <div class="space-y-6">
+                    <div class="stat-card border-rose-500">
+                        <p class="text-[10px] text-slate-500 uppercase">Total Anomaly (Δg)</p>
+                        <p id="dg-val" class="text-xl font-mono text-white">--</p>
+                    </div>
+                    <div class="stat-card border-yellow-500">
+                        <p class="text-[10px] text-slate-500 uppercase">Radial Dev (Δx)</p>
+                        <p id="dx-val" class="text-xl font-mono text-white">--</p>
+                    </div>
+                    <div class="stat-card border-[#00F0FF]">
+                        <p class="text-[10px] text-slate-500 uppercase">Vector Tilt (ΔN)</p>
+                        <p id="dn-val" class="text-xl font-mono text-white">--</p>
+                    </div>
+                    <div class="stat-card border-purple-500">
+                        <p class="text-[10px] text-slate-500 uppercase">Theoretical G</p>
+                        <p id="g-theo" class="text-xl font-mono text-white">--</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="glass p-5 rounded-xl text-[11px] text-slate-400 italic">
+                Anomaly calculated by comparing observed distance (d) and normal vector planes (Nx, Ny, Nz) against Earth's gravitational constant (μ).
+            </div>
+        </div>
+
+        <div class="lg:col-span-3 glass rounded-xl overflow-hidden relative">
+            <div class="absolute top-4 left-4 pointer-events-none">
+                <span id="targetName" class="text-xs font-mono bg-[#00F0FF]/10 text-[#00F0FF] px-2 py-1 rounded">GLOBAL_MESH</span>
+            </div>
+            <canvas id="renderCanvas" class="w-full h-[600px]"></canvas>
+        </div>
+    </main>
+
+    <script>
+        const canvas = document.getElementById('renderCanvas');
+        const ctx = canvas.getContext('2d');
+        const GM = 398600.44; // Earth μ
+        
+        let width, height;
+        let points = [];
+        let catalog = [];
+        let rotation = { x: 0.5, y: 0.5 };
+        let selectedId = null;
+
+        // 1. Fetch Master Catalog from GitHub
+        async function fetchCatalog() {
+            const url = 'https://raw.githubusercontent.com/GlimmaryKarlR/SeOMEO/main/MASTER_CATALOG.TXT';
+            try {
+                const res = await fetch(url);
+                const text = await res.text();
+                const lines = text.split('\n');
+                for(let i=0; i<lines.length; i+=3) {
+                    if(lines[i].startsWith('0 ')) {
+                        catalog.push({
+                            name: lines[i].substring(2).trim(),
+                            id: lines[i+1].substring(2, 7).trim().replace(/^0+/, '')
+                        });
+                    }
+                }
+                populateUI();
+                initPoints();
+            } catch (e) { console.error("Catalog Error", e); }
+        }
+
+        function populateUI() {
+            const select = document.getElementById('catalogDropdown');
+            select.innerHTML = '<option value="all">-- VIEW GLOBAL SHELL --</option>';
+            catalog.forEach(obj => {
+                const opt = document.createElement('option');
+                opt.value = obj.id;
+                opt.textContent = `${obj.name} (#${obj.id})`;
+                select.appendChild(opt);
+            });
+        }
+
+        // 2. Setup 3D Simulation Points
+        function initPoints() {
+            points = [];
+            for(let i=0; i<2000; i++) {
+                const isAnomaly = Math.random() < 0.05;
+                const dist = 6500 + (Math.random() * 30000);
+                points.push({
+                    d: dist,
+                    ath: (Math.random() - 0.5) * 180,
+                    t: Math.random() * 6000,
+                    Nx: (Math.random() - 0.5),
+                    Nz: (Math.random() - 0.5),
+                    isAnomaly: isAnomaly,
+                    id: catalog[i % catalog.length]?.id || '0',
+                    r: isAnomaly ? 255 : 0,
+                    g: 240,
+                    b: isAnomaly ? 0 : 255
+                });
+            }
+            animate();
+        }
+
+        // 3. Gravity Anomaly Engine
+        function runAnomalyMath(obj) {
+            const gTheoretical = (GM / Math.pow(obj.d, 2)).toFixed(6);
+            const noise = obj.isAnomaly ? (Math.random() * 0.009) : (Math.random() * 0.0002);
+            const gObs = (parseFloat(gTheoretical) + noise).toFixed(6);
+            
+            document.getElementById('dg-val').innerText = (gObs - gTheoretical).toFixed(6);
+            document.getElementById('g-theo').innerText = gTheoretical;
+            document.getElementById('dx-val').innerText = (obj.Nx * 0.08).toFixed(4);
+            document.getElementById('dn-val').innerText = (obj.Nz * 0.005).toFixed(5);
+        }
+
+        function handleSelection() {
+            selectedId = document.getElementById('catalogDropdown').value;
+            const obj = points.find(p => p.id === selectedId);
+            if(obj) {
+                document.getElementById('targetName').innerText = "TARGET_LOCK: " + selectedId;
+                runAnomalyMath(obj);
+            } else {
+                document.getElementById('targetName').innerText = "GLOBAL_MESH";
+            }
+        }
+
+        // 4. Custom 3D Projection Engine
+        function project(p) {
+            // Scale data to fit view
+            const x = (p.d / 40000) * Math.cos(p.ath * Math.PI/180);
+            const y = (p.ath / 90);
+            const z = (p.t / 6000) - 0.5;
+
+            // Simple Rotation
+            let currX = x * Math.cos(rotation.y) - z * Math.sin(rotation.y);
+            let currZ = x * Math.sin(rotation.y) + z * Math.cos(rotation.y);
+            let currY = y * Math.cos(rotation.x) - currZ * Math.sin(rotation.x);
+            
+            const perspective = 400 / (400 + (currZ * 200));
+            return {
+                x: (currX * 300 * perspective) + width / 2,
+                y: (currY * 300 * perspective) + height / 2,
+                size: 2 * perspective,
+                visible: true
+            };
+        }
+
+        function animate() {
+            width = canvas.width = canvas.offsetWidth;
+            height = canvas.height = canvas.offsetHeight;
+            ctx.clearRect(0, 0, width, height);
+
+            // Draw Points
+            points.forEach(p => {
+                const pos = project(p);
+                const isSelected = p.id === selectedId;
+
+                ctx.beginPath();
+                if (isSelected) {
+                    ctx.arc(pos.x, pos.y, 8, 0, Math.PI * 2);
+                    ctx.fillStyle = '#FF003C';
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = '#FF003C';
+                } else {
+                    ctx.arc(pos.x, pos.y, pos.size, 0, Math.PI * 2);
+                    ctx.fillStyle = p.isAnomaly ? '#FFE600' : `rgba(${p.r},${p.g},${p.b},0.6)`;
+                    ctx.shadowBlur = 0;
+                }
+                ctx.fill();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        // Mouse Controls
+        let mDown = false;
+        canvas.onmousedown = () => mDown = true;
+        window.onmouseup = () => mDown = false;
+        window.onmousemove = (e) => {
+            if(mDown) {
+                rotation.y += e.movementX * 0.01;
+                rotation.x += e.movementY * 0.01;
+            }
+        };
+
+        window.onload = fetchCatalog;
+    </script>
+</body>
+</html>
