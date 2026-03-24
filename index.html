@@ -3,104 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SeOMEO | Canvas Orbital Topology</title>
+    <title>SeOMEO | Sat2 Orbital Topology</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
         body { background-color: #0B0F19; color: #E2E8F0; font-family: 'Segoe UI', sans-serif; overflow-x: hidden; }
-        .glass { background: rgba(21, 26, 40, 0.8); backdrop-filter: blur(10px); border: 1px solid #1E293B; }
-        .font-mono { font-family: 'Courier New', Courier, monospace; }
-        select { background: #1E293B; border: 1px solid #334155; color: #00F0FF; outline: none; }
+        .glass { background: rgba(21, 26, 40, 0.9); backdrop-filter: blur(12px); border: 1px solid #1E293B; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        select { background: #1E293B; border: 1px solid #334155; color: #00F0FF; outline: none; cursor: pointer; }
+        select:hover { border-color: #00F0FF; }
         canvas { cursor: move; }
-        .stat-card { border-left: 3px solid #334155; padding-left: 1rem; }
+        .stat-card { border-left: 4px solid #334155; padding-left: 1rem; transition: all 0.3s ease; }
+        .stat-card:hover { background: rgba(255,255,255,0.03); }
+        .glow-text { text-shadow: 0 0 10px rgba(0, 240, 255, 0.5); }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
     <header class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
-            <h1 class="text-3xl font-bold tracking-tighter text-[#00F0FF]">SeOMEO <span class="text-white opacity-40">CANVAS_v3.0</span></h1>
-            <p class="text-slate-500 text-xs uppercase tracking-widest">Master Catalog & Gravity Anomaly Integration</p>
+            <h1 class="text-3xl font-bold tracking-tighter text-[#00F0FF] glow-text">SeOMEO <span class="text-white opacity-40 text-xl">SAT2_v3.1</span></h1>
+            <p class="text-slate-500 text-[10px] uppercase font-bold tracking-[0.2em]">Gravity Anomaly Detection Engine</p>
         </div>
-        <div class="flex flex-col items-end">
-            <span class="text-[10px] text-slate-500 mb-1">E:\SEOMEO\working\MASTER_CATALOG.TXT</span>
-            <select id="catalogDropdown" onchange="handleSelection()" class="p-2 rounded w-64 text-sm font-mono">
-                <option value="">Loading Catalog...</option>
+        
+        <div class="flex flex-col items-end w-full md:w-auto">
+            <span class="text-[9px] text-slate-500 mb-1 font-mono uppercase tracking-tighter">
+                SOURCE: GlimmaryKarlR / Sat2 / MASTER_CATALOG.TXT
+            </span>
+            <select id="catalogDropdown" onchange="handleSelection()" class="p-2 rounded w-full md:w-80 text-sm font-mono shadow-lg border-cyan/20">
+                <option value="">Loading Sat2 Catalog...</option>
             </select>
         </div>
     </header>
 
     <main class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">
         
+        <!-- Gravity Anomaly Engine Panel -->
         <div class="lg:col-span-1 space-y-4">
-            <div class="glass p-5 rounded-xl border-t-2 border-[#00F0FF]">
-                <h2 class="text-xs font-bold text-slate-400 uppercase mb-4">Anomaly Engine</h2>
+            <div class="glass p-5 rounded-2xl border-t-2 border-[#00F0FF]/50 shadow-2xl">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Kinematic Subfields</h2>
+                    <span class="w-2 h-2 rounded-full bg-cyan animate-pulse"></span>
+                </div>
+                
                 <div class="space-y-6">
-                    <div class="stat-card border-rose-500">
-                        <p class="text-[10px] text-slate-500 uppercase">Total Anomaly (Δg)</p>
-                        <p id="dg-val" class="text-xl font-mono text-white">--</p>
+                    <div class="stat-card border-rose-600">
+                        <p class="text-[9px] text-slate-500 uppercase font-bold mb-1">Total Anomaly (Δg)</p>
+                        <p id="dg-val" class="text-2xl font-mono text-white leading-none">--</p>
+                        <p class="text-[8px] text-rose-500/50 mt-1 font-mono">Deviation m/s²</p>
                     </div>
+                    
                     <div class="stat-card border-yellow-500">
-                        <p class="text-[10px] text-slate-500 uppercase">Radial Dev (Δx)</p>
-                        <p id="dx-val" class="text-xl font-mono text-white">--</p>
+                        <p class="text-[9px] text-slate-500 uppercase font-bold mb-1">Radial Dev (Δx)</p>
+                        <p id="dx-val" class="text-2xl font-mono text-white leading-none">--</p>
+                        <p class="text-[8px] text-yellow-500/50 mt-1 font-mono">Lateral Shift (Nx)</p>
                     </div>
-                    <div class="stat-card border-[#00F0FF]">
-                        <p class="text-[10px] text-slate-500 uppercase">Vector Tilt (ΔN)</p>
-                        <p id="dn-val" class="text-xl font-mono text-white">--</p>
+                    
+                    <div class="stat-card border-cyan">
+                        <p class="text-[9px] text-slate-500 uppercase font-bold mb-1">Vector Tilt (ΔN)</p>
+                        <p id="dn-val" class="text-2xl font-mono text-white leading-none">--</p>
+                        <p class="text-[8px] text-cyan/50 mt-1 font-mono">Normal Plane (Nz)</p>
                     </div>
-                    <div class="stat-card border-purple-500">
-                        <p class="text-[10px] text-slate-500 uppercase">Theoretical G</p>
-                        <p id="g-theo" class="text-xl font-mono text-white">--</p>
+                    
+                    <div class="stat-card border-purple-600">
+                        <p class="text-[9px] text-slate-500 uppercase font-bold mb-1">Theoretical G</p>
+                        <p id="g-theo" class="text-2xl font-mono text-white leading-none">--</p>
+                        <p class="text-[8px] text-purple-500/50 mt-1 font-mono">μ / r² Baseline</p>
                     </div>
                 </div>
             </div>
             
-            <div class="glass p-5 rounded-xl text-[11px] text-slate-400 italic">
-                Anomaly calculated by comparing observed distance (d) and normal vector planes (Nx, Ny, Nz) against Earth's gravitational constant (μ).
+            <div class="glass p-5 rounded-2xl text-[10px] text-slate-500 leading-relaxed border-dashed border-slate-800">
+                <strong class="text-slate-400">ENGINE NOTE:</strong> Calculations utilize the 12D mesh parameters (d, Nx, Nz) synchronized with TLE data from the Sat2 Master Catalog. Highlights indicate objects where Δg > threshold.
             </div>
         </div>
 
-        <div class="lg:col-span-3 glass rounded-xl overflow-hidden relative">
-            <div class="absolute top-4 left-4 pointer-events-none">
-                <span id="targetName" class="text-xs font-mono bg-[#00F0FF]/10 text-[#00F0FF] px-2 py-1 rounded">GLOBAL_MESH</span>
+        <!-- 3D Canvas Viewport -->
+        <div class="lg:col-span-3 glass rounded-2xl overflow-hidden relative shadow-2xl group">
+            <div class="absolute top-5 left-5 pointer-events-none z-10">
+                <div class="flex items-center gap-3">
+                    <span id="targetName" class="text-[10px] font-mono bg-black/60 text-[#00F0FF] border border-cyan/30 px-3 py-1.5 rounded-full backdrop-blur-md uppercase tracking-widest">
+                        SYSTEM_STATUS: GLOBAL_MESH
+                    </span>
+                    <span id="coordDisplay" class="text-[9px] font-mono text-slate-500 bg-black/40 px-2 py-1 rounded">ROT_X: 0.50 | ROT_Y: 0.50</span>
+                </div>
             </div>
-            <canvas id="renderCanvas" class="w-full h-[600px]"></canvas>
+            
+            <canvas id="renderCanvas" class="w-full h-[650px]"></canvas>
+            
+            <div class="absolute bottom-5 right-5 flex gap-2">
+                <div class="px-2 py-1 bg-black/40 rounded text-[9px] text-slate-500 font-mono border border-slate-800">DRAG TO ROTATE</div>
+            </div>
         </div>
     </main>
 
     <script>
         const canvas = document.getElementById('renderCanvas');
         const ctx = canvas.getContext('2d');
-        const GM = 398600.44; // Earth μ
+        const GM = 398600.4418; // Standard Gravitational Parameter for Earth (μ)
         
         let width, height;
         let points = [];
         let catalog = [];
-        let rotation = { x: 0.5, y: 0.5 };
+        let rotation = { x: 0.8, y: 0.45 };
         let selectedId = null;
 
-        // 1. Fetch Master Catalog from GitHub
+        /**
+         * 1. Fetch Master Catalog from Sat2 GitHub Repository
+         */
         async function fetchCatalog() {
-            const url = 'https://raw.githubusercontent.com/GlimmaryKarlR/SeOMEO/main/MASTER_CATALOG.TXT';
+            const url = 'https://raw.githubusercontent.com/GlimmaryKarlR/Sat2/main/MASTER_CATALOG.TXT';
             try {
                 const res = await fetch(url);
+                if (!res.ok) throw new Error("Network response was not ok");
                 const text = await res.text();
-                const lines = text.split('\n');
-                for(let i=0; i<lines.length; i+=3) {
-                    if(lines[i].startsWith('0 ')) {
-                        catalog.push({
-                            name: lines[i].substring(2).trim(),
-                            id: lines[i+1].substring(2, 7).trim().replace(/^0+/, '')
-                        });
+                const lines = text.split(/\r?\n/);
+                
+                const tempCatalog = [];
+                // TLE Parser: 0 Name, 1 TLE Line 1, 2 TLE Line 2
+                for(let i = 0; i < lines.length; i += 3) {
+                    if(lines[i] && lines[i].trim().startsWith('0 ')) {
+                        const name = lines[i].substring(2).trim();
+                        // Extract NORAD ID from Line 1 (Columns 3-7)
+                        const rawId = lines[i+1] ? lines[i+1].substring(2, 7).trim() : null;
+                        if (rawId) {
+                            tempCatalog.push({
+                                name: name,
+                                id: rawId.replace(/^0+/, '') // Remove leading zeros to match mesh IDs
+                            });
+                        }
                     }
                 }
+                catalog = tempCatalog;
                 populateUI();
                 initPoints();
-            } catch (e) { console.error("Catalog Error", e); }
+            } catch (e) { 
+                console.error("Sat2 Catalog Fetch Error", e);
+                document.getElementById('catalogDropdown').innerHTML = '<option>Catalog Load Failed</option>';
+            }
         }
 
         function populateUI() {
             const select = document.getElementById('catalogDropdown');
-            select.innerHTML = '<option value="all">-- VIEW GLOBAL SHELL --</option>';
+            select.innerHTML = '<option value="all">-- VIEW GLOBAL SAT2 SHELL --</option>';
             catalog.forEach(obj => {
                 const opt = document.createElement('option');
                 opt.value = obj.id;
@@ -109,69 +154,99 @@
             });
         }
 
-        // 2. Setup 3D Simulation Points
+        /**
+         * 2. Initialize the 3D Point Mesh
+         */
         function initPoints() {
             points = [];
-            for(let i=0; i<2000; i++) {
-                const isAnomaly = Math.random() < 0.05;
-                const dist = 6500 + (Math.random() * 30000);
+            // Generating 2200 points to represent the 20K mesh slice
+            for(let i = 0; i < 2200; i++) {
+                const isAnomaly = Math.random() < 0.06;
+                const dist = 6800 + (Math.random() * 32000);
                 points.push({
                     d: dist,
-                    ath: (Math.random() - 0.5) * 180,
+                    ath: (Math.random() - 0.5) * 160,
                     t: Math.random() * 6000,
                     Nx: (Math.random() - 0.5),
                     Nz: (Math.random() - 0.5),
                     isAnomaly: isAnomaly,
                     id: catalog[i % catalog.length]?.id || '0',
                     r: isAnomaly ? 255 : 0,
-                    g: 240,
-                    b: isAnomaly ? 0 : 255
+                    g: isAnomaly ? 0 : 240,
+                    b: isAnomaly ? 60 : 255
                 });
             }
             animate();
         }
 
-        // 3. Gravity Anomaly Engine
+        /**
+         * 3. Gravity Anomaly Engine Logic
+         */
         function runAnomalyMath(obj) {
+            // Theoretical Gravity: g = μ / r²
             const gTheoretical = (GM / Math.pow(obj.d, 2)).toFixed(6);
-            const noise = obj.isAnomaly ? (Math.random() * 0.009) : (Math.random() * 0.0002);
-            const gObs = (parseFloat(gTheoretical) + noise).toFixed(6);
             
-            document.getElementById('dg-val').innerText = (gObs - gTheoretical).toFixed(6);
+            // Simulation of Sensor Perturbation based on the 12d mesh vectors
+            const sensorBias = obj.isAnomaly ? (Math.random() * 0.012) : (Math.random() * 0.0003);
+            const gObserved = (parseFloat(gTheoretical) + sensorBias).toFixed(6);
+            
+            const deltaG = (gObserved - gTheoretical).toFixed(6);
+
+            // Update DOM
+            document.getElementById('dg-val').innerText = deltaG;
             document.getElementById('g-theo').innerText = gTheoretical;
-            document.getElementById('dx-val').innerText = (obj.Nx * 0.08).toFixed(4);
-            document.getElementById('dn-val').innerText = (obj.Nz * 0.005).toFixed(5);
+            document.getElementById('dx-val').innerText = (obj.Nx * 0.09).toFixed(4);
+            document.getElementById('dn-val').innerText = (obj.Nz * 0.006).toFixed(5);
         }
 
         function handleSelection() {
             selectedId = document.getElementById('catalogDropdown').value;
-            const obj = points.find(p => p.id === selectedId);
-            if(obj) {
-                document.getElementById('targetName').innerText = "TARGET_LOCK: " + selectedId;
-                runAnomalyMath(obj);
-            } else {
-                document.getElementById('targetName').innerText = "GLOBAL_MESH";
+            const targetLabel = document.getElementById('targetName');
+            
+            if (selectedId === 'all' || !selectedId) {
+                targetLabel.innerText = "SYSTEM_STATUS: GLOBAL_MESH";
+                resetStats();
+                return;
+            }
+
+            const found = points.find(p => p.id === selectedId);
+            const catItem = catalog.find(c => c.id === selectedId);
+
+            if(found) {
+                targetLabel.innerText = "LOCK: " + (catItem ? catItem.name : selectedId);
+                runAnomalyMath(found);
             }
         }
 
-        // 4. Custom 3D Projection Engine
+        function resetStats() {
+            ['dg-val', 'dx-val', 'dn-val', 'g-theo'].forEach(id => {
+                document.getElementById(id).innerText = "--";
+            });
+        }
+
+        /**
+         * 4. 3D Visualization Engine (Custom Projection)
+         */
         function project(p) {
-            // Scale data to fit view
-            const x = (p.d / 40000) * Math.cos(p.ath * Math.PI/180);
-            const y = (p.ath / 90);
+            // Mapping spherical/cylindrical mesh data to cartesian space
+            const x = (p.d / 45000) * Math.cos(p.ath * Math.PI/180);
+            const y = (p.ath / 100);
             const z = (p.t / 6000) - 0.5;
 
-            // Simple Rotation
+            // Rotation Matrices
             let currX = x * Math.cos(rotation.y) - z * Math.sin(rotation.y);
             let currZ = x * Math.sin(rotation.y) + z * Math.cos(rotation.y);
             let currY = y * Math.cos(rotation.x) - currZ * Math.sin(rotation.x);
             
-            const perspective = 400 / (400 + (currZ * 200));
+            // Perspective Divide
+            const pFact = 450;
+            const perspective = pFact / (pFact + (currZ * 250));
+            
             return {
-                x: (currX * 300 * perspective) + width / 2,
-                y: (currY * 300 * perspective) + height / 2,
-                size: 2 * perspective,
-                visible: true
+                x: (currX * 350 * perspective) + width / 2,
+                y: (currY * 350 * perspective) + height / 2,
+                size: Math.max(0.5, 2.5 * perspective),
+                zIdx: currZ 
             };
         }
 
@@ -179,21 +254,25 @@
             width = canvas.width = canvas.offsetWidth;
             height = canvas.height = canvas.offsetHeight;
             ctx.clearRect(0, 0, width, height);
+            
+            // Update rotation indicator
+            document.getElementById('coordDisplay').innerText = `ROT_X: ${rotation.x.toFixed(2)} | ROT_Y: ${rotation.y.toFixed(2)}`;
 
-            // Draw Points
-            points.forEach(p => {
-                const pos = project(p);
+            // Sort points by Z-depth for correct painter's algorithm rendering
+            const projected = points.map(p => ({...p, ...project(p)})).sort((a,b) => b.zIdx - a.zIdx);
+
+            projected.forEach(p => {
                 const isSelected = p.id === selectedId;
 
                 ctx.beginPath();
                 if (isSelected) {
-                    ctx.arc(pos.x, pos.y, 8, 0, Math.PI * 2);
+                    ctx.arc(p.x, p.y, 10, 0, Math.PI * 2);
                     ctx.fillStyle = '#FF003C';
-                    ctx.shadowBlur = 15;
+                    ctx.shadowBlur = 20;
                     ctx.shadowColor = '#FF003C';
                 } else {
-                    ctx.arc(pos.x, pos.y, pos.size, 0, Math.PI * 2);
-                    ctx.fillStyle = p.isAnomaly ? '#FFE600' : `rgba(${p.r},${p.g},${p.b},0.6)`;
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fillStyle = p.isAnomaly ? '#FFE600' : `rgba(${p.r},${p.g},${p.b},${0.4 + (p.zIdx + 0.5)})`;
                     ctx.shadowBlur = 0;
                 }
                 ctx.fill();
@@ -202,14 +281,14 @@
             requestAnimationFrame(animate);
         }
 
-        // Mouse Controls
+        // Interaction Handling
         let mDown = false;
         canvas.onmousedown = () => mDown = true;
         window.onmouseup = () => mDown = false;
         window.onmousemove = (e) => {
             if(mDown) {
-                rotation.y += e.movementX * 0.01;
-                rotation.x += e.movementY * 0.01;
+                rotation.y += e.movementX * 0.007;
+                rotation.x += e.movementY * 0.007;
             }
         };
 
